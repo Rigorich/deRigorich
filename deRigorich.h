@@ -1,5 +1,5 @@
 
-/* Version 04.05.2020 BETA */
+/* Version 07.05.2020 BETA */
 /* Автор: Никита Григорьевич (Гришаев), ст.гр. 953501 */
 
 /*
@@ -53,6 +53,7 @@ void MallocCheck(void* ptr); /* Проверка на успешное выделение памяти */
 
 /* Полезности */
 void swap(void* a, void* b, int size); /* Обмен местами двух элементов размера size */
+void sort(void* begin, void* end, int sizeof_element, bool (*comp) (void* a, void* b)); /* Сортировка */
 
 /* Вектор */
 typedef struct Vector Vector;
@@ -76,6 +77,8 @@ void VectorSetElem(Vector* that, int index, void* what); /* Изменяет элемент с у
 int VectorFindElem(Vector* that, void* what); /* Возвращает индекс первого вхождения элемента или -1 */
 int VectorFindLastElem(Vector* that, void* what); /* Возвращает индекс последнего вхождения элемента или -1 */
 bool VectorContainElem(Vector* that, void* what); /* Возвращает существование вхождения элемента */
+void* VectorGetComp(Vector* that); /* Возвращает компаратор вектора */
+void VectorSetComp(Vector* that, bool (*comp) (void* a, void* b)); /* Устанавливает компаратор вектора */
 void VectorSort(Vector* that); /* Сортирует вектор */
 void VectorSortComp(Vector* that, bool (*comp) (void* a, void* b)); /* Сортирует вектор с использованием компаратора */
 void VectorResize(Vector* that, int newsize); /* Изменяет количество элементов массива */

@@ -38,11 +38,66 @@ void* Malloc(long long ByteCount) {
 }
 
 void swap(void* a, void* b, int size) {
+    if (a == b) return;
     void* tmp = Malloc(size);
     memcpy(tmp, a, size);
     memcpy(a, b, size);
     memcpy(b, tmp, size);
     free(tmp);
+}
+
+void Subsort(void* arr, int elemsize, bool(*comp)(void*,void*), int* tmp, int* inds, int L, int R) {
+    if (L == R)
+        return;
+    int M = (L + R) / 2 + 1;
+    Subsort(arr, elemsize, comp, tmp, inds, L, M - 1);
+    Subsort(arr, elemsize, comp, tmp, inds, M, R);
+    int i = L, j = M, k = L;
+    while (i < M && j <= R) {
+        if (comp(arr + inds[j] * elemsize, arr + inds[i] * elemsize)) {
+            tmp[k] = inds[j];
+            k++;
+            j++;
+        } else {
+            tmp[k] = inds[i];
+            k++;
+            i++;
+        }
+    }
+    while (i < M) {
+        tmp[k] = inds[i];
+        k++;
+        i++;
+    }
+    while (j <= R) {
+        tmp[k] = inds[j];
+        k++;
+        j++;
+    }
+    for (k = L; k <= R; k++)
+        inds[k] = tmp[k];
+}
+
+void sort(void* begin, void* end, int sizeof_element, bool (*comp) (void* a, void* b)) {
+    int n = (end - begin) / sizeof_element;
+    if (n < 2)
+        return;
+    int* tmp = (int*)Malloc(n * sizeof(int));
+    int* inds = (int*)Malloc(n * sizeof(int));
+    int i;
+    for (i = 0; i < n; i++)
+        inds[i] = i;
+    Subsort(begin, sizeof_element, comp, tmp, inds, 0, n - 1);
+    for (i = 0; i < n; i++)
+        tmp[inds[i]] = i;
+    for (i = 0; i < n; i++) {
+        while (i != tmp[i]) {
+            swap(begin + i * sizeof_element, begin + tmp[i] * sizeof_element, sizeof_element);
+            swap(&(tmp[i]), &(tmp[tmp[i]]), sizeof(int));
+        }
+    }
+    free(tmp);
+    free(inds);
 }
 
 /* */
@@ -161,6 +216,17 @@ void VectorSetComp(Vector* that, bool (*comparator) (void* a, void* b)) {
     that->comp = comparator;
 }
 
+void VectorSort(Vector* that) {
+    sort(that->begin, that->begin + that->size * that->elemsize, that->elemsize, VectorGetComp(that));
+}
+
+void VectorSortComp(Vector* that, bool (*comp) (void* a, void* b)){
+    bool(*tmp)(void*,void*) = that->comp;
+    VectorSetComp(that, comp);
+    VectorSort(that);
+    VectorSetComp(that, tmp);
+}
+
 int VectorFindElem(Vector* that, void* what) {
     int i;
     for (i = 0; i < VectorSize(that); i++) {
@@ -183,22 +249,6 @@ int VectorFindLastElem(Vector* that, void* what) {
 
 bool VectorContainElem(Vector* that, void* what) {
     return VectorFindElem(that, what) != -1;
-}
-
-void VectorSort(Vector* that){
-    int i, j;
-    for(i = 0; i < VectorSize(that); i++)
-    for(j = i + 1; j < VectorSize(that); j++)
-    if (OperLess(VectorGetElem(that, j), VectorGetElem(that, i), (bool(*)(void*,void*))VectorGetComp(that))) {
-        swap(VectorGetElem(that, j), VectorGetElem(that, i), that->elemsize);
-    }
-}
-
-void VectorSortComp(Vector* that, bool (*comp) (void* a, void* b)){
-    bool(*tmp)(void*,void*) = that->comp;
-    VectorSetComp(that, comp);
-    VectorSort(that);
-    VectorSetComp(that, tmp);
 }
 
 void VectorRealloc(Vector* that, int newalloc) {
